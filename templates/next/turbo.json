@@ -2,8 +2,8 @@
     "$schema": "https://turbo.build/schema.json",
     "pipeline": {
       "dev": {
-        "cache": false,
         "dependsOn": ["^dev"],
+        "cache": false,
         "outputs": []
       },
       "build": {
