@@ -39,7 +39,4 @@ export class WebsocketsGateway implements OnGatewayInit, OnGatewayConnection, On
   async handlePoolRideEvents(client: Socket, payload: any): Promise<any> {
     this.server.emit('hi','hello')
   }
-
- 
-
 }

@@ -1,32 +1,50 @@
-// ...
 import { Module } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { throttleConfig } from './configs/throttle.config';
-import { WinstonModule } from 'nest-winston';
-import winstonInstance from './configs/winston.config';
-import { TrpcModule } from './trpc/trpc.module';
-import { AppRouterHost } from 'nestjs-trpc';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bullmq';
-import { MailConsumer } from './consumers/mail.consumer';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from "@bull-board/express";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { WebsocketsGateway } from './websocket/websocket.gateway';
+import { WinstonModule } from 'nest-winston';
+import winstonInstance from './configs/winston.config';
+
+// Custom Modules
+import { AuthModule } from './auth/auth.module';
+import { TrpcModule } from './trpc/trpc.module';
 import { CronModule } from './cron/cron.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { UtilsModule } from './utils/utils.module';
-import { validate } from './configs/env.config';
-import { ConfigModule } from '@nestjs/config';
 import { FileStorageModule } from './file-storage/file-storage.module';
 import { HealthModule } from './health/health.module';
-import Dashboard from "supertokens-node/recipe/dashboard";
+
+// Controllers & Services
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+// Guards & Interceptors
+import { throttleConfig } from './configs/throttle.config';
+import { validate } from './configs/env.config';
+
+// Consumers
+import { MailConsumer } from './consumers/mail.consumer';
+
+// WebSockets
+import { WebsocketsGateway } from './websocket/websocket.gateway';
+
 @Module({
   imports: [
+    // Load Environment Variables and Validate
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate,
+    }),
+
+    // Logging with Winston
+    WinstonModule.forRoot(winstonInstance),
+
+    // Authentication Module (Configuration moved to `auth.config.ts`)
     AuthModule.forRoot({
       connectionURI: "http://localhost:3567",
       // apiKey: "<YOUR_API_KEY>", // If you're using an API key
@@ -38,47 +56,67 @@ import Dashboard from "supertokens-node/recipe/dashboard";
         websiteBasePath: "/auth",
       },
     }),
-    BullModule.forRoot({
-      connection: {
-        host: 'localhost',
-        port: 6379,
-      }
+
+    // Rate Limiting (Throttling)
+    ThrottlerModule.forRoot(throttleConfig),
+
+    // Caching (Global)
+    CacheModule.register({ isGlobal: true }),
+
+    // Background Jobs (BullMQ & Redis)
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST', 'localhost'),
+          port: configService.get<number>('REDIS_PORT', 6379),
+        },
+      }),
+      inject: [ConfigService],
     }),
+
+    // Queue Registration
     BullModule.registerQueue({ name: 'mail-queue' }),
+
+    // Bull Dashboard (Queue Monitoring)
     BullBoardModule.forRoot({
       route: '/queues',
-      adapter: ExpressAdapter // Or FastifyAdapter from `@bull-board/fastify`
+      adapter: ExpressAdapter, // Can be replaced with FastifyAdapter if using Fastify
     }),
     BullBoardModule.forFeature({
       name: 'mail-queue',
-      adapter: BullMQAdapter, //or use BullAdapter if you're using bull instead of bullMQ
+      adapter: BullMQAdapter, // Use BullAdapter if using Bull instead of BullMQ
     }),
+
+    // Scheduling (Cron Jobs)
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot(throttleConfig),
-    CacheModule.register({
-      isGlobal:true
-    }),
-    ConfigModule.forRoot({
-      isGlobal:true,
-      validate
-    }),
-    AppModule,
+
+    // Feature Modules
     TrpcModule,
     CronModule,
     UtilsModule,
     FileStorageModule,
-    HealthModule
+    HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService, MailConsumer, {
-    provide: APP_GUARD,
-    useClass: ThrottlerGuard, // Apply globally
-  }, {
-    provide: APP_INTERCEPTOR,
-    useClass: CacheInterceptor,
-  }, WebsocketsGateway],
+  providers: [
+    AppService,
+    MailConsumer,
+    
+    // Global Rate Limiting Guard
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+
+    // Global Caching Interceptor
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+
+    // WebSocket Gateway
+    WebsocketsGateway,
+  ],
 })
-export class AppModule { 
-  constructor(){
-  }
-}
+export class AppModule {}
