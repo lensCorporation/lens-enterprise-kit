@@ -1,9 +1,0 @@
-{
-    "functions": {
-      "api/*": { "runtime": "edge" }
-    },
-    "routes": [
-      { "src": "/(.*)", "dest": "/index.html" }
-    ]
-  }
-  
