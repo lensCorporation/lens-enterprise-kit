@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Button, buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
+import Image from "next/image";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +37,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <div className="flex justify-between items-center m-4">
+              <Image src="/Lens_white_Logo.png" alt="Lenscorp" width={100} height={100} />
+          <Link className={buttonVariants({ variant: "outline" })} href="/login">Login</Link>
+
+      </div>
             {children}
           </ThemeProvider>
       </body>

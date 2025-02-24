@@ -1,5 +1,15 @@
+<script lang="ts">
+	import { buttonVariants } from "../lib/components/ui/button";
 
-  
+
+
+</script>
+
+<div class="flex justify-between items-center">
+    <img src="/Lens_white_Logo.png" alt="Lenscorp" width={100} height={100} />
+<a class={buttonVariants({ variant: "outline" })} href="/login">Login</a>
+
+</div>
   <div class="relative flex h-[700px] w-full flex-col items-center justify-center overflow-hidden">
     <span class="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-gray-300/80 bg-clip-text text-center text-8xl font-semibold leading-none text-transparent dark:from-white dark:to-slate-900/10">
       Lenscorp

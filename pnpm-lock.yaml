@@ -290,6 +290,9 @@ importers:
       globals:
         specifier: ^15.14.0
         version: 15.14.0
+      lucide-svelte:
+        specifier: ^0.475.0
+        version: 0.475.0(svelte@5.20.2)
       prettier:
         specifier: ^3.4.2
         version: 3.5.0
@@ -4342,6 +4345,11 @@ packages:
   lru-cache@7.18.3:
     resolution: {integrity: sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==}
     engines: {node: '>=12'}
+
+  lucide-svelte@0.475.0:
+    resolution: {integrity: sha512-N5+hFTPHaZe9HhqJDxxxODfYuOmI6v+JIowzERcea/uxytN/JZlehVTcINBNp8wMo7l6ov1Jf5srrDbkI/WsJg==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5.0.0-next.42
 
   luxon@3.5.0:
     resolution: {integrity: sha512-rh+Zjr6DNfUYR3bPwJEnuwDdqMbxZW7LOQfUN4B54+Cl+0o5zaU9RJ6bcidfDtC1cWCZXQ+nvX8bf6bAji37QQ==}
@@ -11306,6 +11314,10 @@ snapshots:
       yallist: 3.1.1
 
   lru-cache@7.18.3: {}
+
+  lucide-svelte@0.475.0(svelte@5.20.2):
+    dependencies:
+      svelte: 5.20.2
 
   luxon@3.5.0: {}
 
