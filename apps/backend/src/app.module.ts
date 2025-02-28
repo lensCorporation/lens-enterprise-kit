@@ -32,6 +32,7 @@ import { MailConsumer } from './consumers/mail.consumer';
 
 // WebSockets
 import { WebsocketsGateway } from './websocket/websocket.gateway';
+import { LocalauthModule } from './localauth/localauth.module';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { WebsocketsGateway } from './websocket/websocket.gateway';
     UtilsModule,
     FileStorageModule,
     HealthModule,
+    LocalauthModule,
   ],
   controllers: [AppController],
   providers: [
