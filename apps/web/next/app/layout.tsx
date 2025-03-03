@@ -26,6 +26,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning
@@ -37,11 +38,6 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="flex justify-between items-center m-4">
-              <Image src="/Lens_white_Logo.png" alt="Lenscorp" width={100} height={100} />
-          <Link className={buttonVariants({ variant: "outline" })} href="/login">Login</Link>
-
-      </div>
             {children}
           </ThemeProvider>
       </body>

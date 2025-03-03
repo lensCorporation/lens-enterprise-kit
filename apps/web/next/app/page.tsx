@@ -1,10 +1,29 @@
+"use client"
 import { Meteors } from "@/components/magicui/meteors";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cookies } from "next/headers";
 import Image from "next/image";
+import Link from "next/link";
+import { useEffect } from "react";
 
 export default function Home() {
+  useEffect(() => {
+    async function fetchRefreshToken() {
+      const response = await fetch("/api/refresh", {
+        method: "POST",
+      });
+      const data = await response.json();
+      console.log("data", data);
+    }
+    fetchRefreshToken();
+  }, []); 
   return (
     <div className="relative flex h-[700px] w-full flex-col items-center justify-center overflow-hidden">
+      <div className="flex justify-between items-center m-1">
+              <Image src="/Lens_white_Logo.png" alt="Lenscorp" width={100} height={100} />
+          <Link className={buttonVariants({ variant: "outline" })} href="/login">Login</Link>
+
+      </div>
       <Meteors />
     <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-gray-300/80 bg-clip-text text-center text-8xl font-semibold leading-none text-transparent dark:from-white dark:to-slate-900/10">
       Lenscorp
