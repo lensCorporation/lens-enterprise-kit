@@ -1,6 +1,6 @@
 export async function GET({ params, fetch }: { params: { route: string }, fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response> }) {
     const response = await fetch(`https://internal-backend-service/api/${params.route}`, {
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_INTERNAL_API_KEY}` }
+        headers: { Authorization: `Bearer ${process.env.VITE_INTERNAL_API_KEY}` }
     });
 
     if (!response.ok) {

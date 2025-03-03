@@ -8,6 +8,10 @@ import winstonInstance from './configs/winston.config';
 import { ConfigService } from '@nestjs/config';
 // import { ValidationPipe } from '@nestjs/common';
 import { ZodValidationPipe } from './configs/zod-validation.pipeline';
+import { doubleCsrf } from 'csrf-csrf';
+import { ValidationPipe } from '@nestjs/common';
+// ...
+// somewhere in your initialization file
 
 async function bootstrap() {
   // Create the NestJS application with Winston logger
@@ -17,6 +21,26 @@ async function bootstrap() {
 
   // Get configuration service
   const configService = app.get(ConfigService);
+
+  // const {
+  //   invalidCsrfTokenError, // This is provided purely for convenience if you plan on creating your own middleware.
+  //   generateToken, // Use this in your routes to generate and provide a CSRF hash, along with a token cookie and token.
+  //   validateRequest, // Also a convenience if you plan on making your own middleware.
+  //   doubleCsrfProtection, // This is the default CSRF protection middleware.
+  // } = doubleCsrf({
+  //   getSecret: () => configService.get<string>('CSRF_SECRET'), // A synchronous function (or promise) that takes the request and returns the CSRF secret.
+  //   cookieName: '__Host-CSRF-Token', // The name of the CSRF token cookie.
+  //   cookieOptions: {
+  //     path: '/',
+  //     sameSite: 'strict',
+  //     httpOnly: true,
+  //     secure: true,
+  //   },
+  //   size: 64, // The size of the generated tokens in bytes.
+  //   ignoredMethods: ['GET', 'HEAD', 'OPTIONS'], // A list of HTTP methods to ignore CSRF checks on.
+  //   getTokenFromRequest: (req:any) => req.headers['csrf-token'] as string, // A function that takes the request and returns the CSRF token from it.
+  // });
+  // app.use(doubleCsrfProtection);
 
   // Enable CORS (with environment-configurable origins)
   app.enableCors({
@@ -54,11 +78,16 @@ async function bootstrap() {
   SwaggerModule.setup('api-docs', app, document);
 
   // Set global API prefix
-  app.setGlobalPrefix('/api/v1');
+  // app.setGlobalPrefix('/api/v1');
 
   // Apply global exception filters and validation pipes
-  app.useGlobalFilters(new SupertokensExceptionFilter());
-  app.useGlobalPipes(new ZodValidationPipe());
+  // app.useGlobalFilters(new SupertokensExceptionFilter());
+  // app.useGlobalPipes(new ZodValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+  }));
+  // app.useGlobalFilters(new HttpExceptionFilter());
 
   // Start the application
   const port = configService.get<number>('PORT', 3000);

@@ -47,11 +47,24 @@ export class AppService {
     
   }
   getHello(): string {
-    this.mailQueue.add('send-mail', {
-      to: 'nishchal.tiwari@lenscorp.ai',
-      subject: 'Test',
-      text: 'This is a test',
-    });
+    // this.mailQueue.add('send-mail', {
+    //   to: 'nishchal.tiwari@lenscorp.ai',
+    //   subject: 'Test',
+    //   text: 'This is a test',
+    // });
+    // this.mailQueue.add('send-verification-mail', {
+    //   to: 'nishchal.tiwari@lenscorp.ai',
+    // });
+    // console.log('Sendingg Message')
+    // this.mailQueue.add('send-verification-sms', {
+    //   to: '9369599622',
+    // });
+    // this.mailQueue.add('send-verification-whatsapp-message', {
+    //   to: '9369599622',
+    // })
+
+
+
     return 'Hello World!';
   }
 }

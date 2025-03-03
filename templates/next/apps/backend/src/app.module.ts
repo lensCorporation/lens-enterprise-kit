@@ -28,16 +28,18 @@ import { throttleConfig } from './configs/throttle.config';
 import { validate } from './configs/env.config';
 
 // Consumers
-import { MailConsumer } from './consumers/mail.consumer';
+import { TransportConsumer } from './consumers/transport.consumer';
 
 // WebSockets
 import { WebsocketsGateway } from './websocket/websocket.gateway';
+import { LocalauthModule } from './localauth/localauth.module';
 
 @Module({
   imports: [
     // Load Environment Variables and Validate
-    ConfigModule.forRoot({
+    ConfigModule.forRoot({  
       isGlobal: true,
+      envFilePath:process.env.NODE_ENV === 'production' ? '.dev.env' : '.env',
       validate,
     }),
 
@@ -97,11 +99,12 @@ import { WebsocketsGateway } from './websocket/websocket.gateway';
     UtilsModule,
     FileStorageModule,
     HealthModule,
+    LocalauthModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    MailConsumer,
+    TransportConsumer,
     
     // Global Rate Limiting Guard
     {

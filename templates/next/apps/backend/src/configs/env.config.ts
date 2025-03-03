@@ -10,7 +10,7 @@ enum Environment {
 }
 
 class EnvironmentVariables {
-  
+
   @IsEnum(Environment)
   NODE_ENV: Environment;
 
@@ -29,7 +29,30 @@ class EnvironmentVariables {
   LENS_MAIL_URL: string;
 
   @IsString()
-  LENS_WHATSAPP_URL:string;
+  LENS_WHATSAPP_URL: string;
+
+  @IsString()
+  DATABASE_URL: string;
+
+  @IsString()
+  LENS_VERIFICATION_MAIL_URL: string;
+
+  @IsString()
+  LENS_VERIFICATION_SMS_URL: string;
+
+  @IsString()
+  LENS_VERIFICATION_WHATSAPP_URL: string;
+
+  @IsString()
+  LENS_VERIFY_MAIL_URL: string;
+
+  @IsString()
+  LENS_VERIFY_SMS_URL: string;
+
+  @IsString()
+  LENS_VERIFY_WHATSAPP_URL: string;
+
+
 }
 
 export function validate(config: Record<string, unknown>) {

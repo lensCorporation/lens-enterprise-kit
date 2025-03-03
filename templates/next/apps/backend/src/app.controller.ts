@@ -37,8 +37,8 @@ export class AppController {
    * Rate-limited GET endpoint with a throttle limit of 1 request per 6000ms.
    * @returns A simple "Hello World" response.
    */
-  @Throttle({ default: { limit: 1, ttl: 6000 } })
-  @UseGuards(ThrottlerGuard) 
+  // @Throttle({ default: { limit: 1, ttl: 6000 } })
+  // @UseGuards(ThrottlerGuard) 
   @Get()
   getHello(): string {
     this.appService.getHello();
