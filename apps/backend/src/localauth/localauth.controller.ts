@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UsePipes, Logger, Req, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, Body, UsePipes, Logger, Req, UseGuards, Get, Res } from '@nestjs/common';
 // import { User, Prisma } from '../../generated/client';
 import { LocalauthService } from './localauth.service';
 // import { JoiValidationPipe } from '../joi.validation.pipes';
@@ -21,9 +21,10 @@ export class LocalauthController {
         @ApiResponse({ status: 201, description: 'User signed up successfully.' })
         @ApiResponse({ status: 400, description: 'Bad Request.' })
         @ApiProperty({ type: SignupDto })   
-        async signup(@Body() data: SignupDto): Promise<{ name: string; email: string }> {
+        
+        async signup(@Body() data: SignupDto, @Req() req: Request): Promise<any> {
             try {
-            return this.localAuthService.createUser(data);
+            return await this.localAuthService.createUser(data,req);
             } catch (error) {
             this.logger.error('Error during signup', error);
             throw error;
@@ -45,9 +46,25 @@ export class LocalauthController {
         refreshToken(@Req() req:Request,@Body() Body:any){
             return this.localAuthService.refreshToken(req,{refreshToken:Body.token})
         }
+
+        @UseGuards(AuthGuard)
+        @Post('activateMFA')
+        async activateMFA(@Req() req: Request,@Res() res: any): Promise<any> {
+            const imgBuffer =  await this.localAuthService.activateUserMFA(req);
+            res.setHeader('Content-Type', 'image/png');
+            res.send(imgBuffer);
+        }
+        @UseGuards(AuthGuard)
+        @Post('deactivateMFA')
+        async deactivateMFA(@Req() req: Request,@Res() res: any): Promise<any> {
+            return await this.localAuthService.disableUserMFA(req);
+        }
+
         @UseGuards(AuthGuard)
         @Get('logout')
         logout(@Req() req:Request,@Body() Body:any){
             return this.localAuthService.logout(req)
         }
+
+
 }

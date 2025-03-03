@@ -114,7 +114,29 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
   email: 'email',
+  phoneNumber: 'phoneNumber',
   password: 'password',
+  isMfaEnabled: 'isMfaEnabled',
+  isLocked: 'isLocked',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserLoginDetailsScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  lastLogin: 'lastLogin',
+  whitelistedIp: 'whitelistedIp',
+  failedAttempts: 'failedAttempts',
+  lastFailedIp: 'lastFailedIp',
+  lastFailedAt: 'lastFailedAt'
+};
+
+exports.Prisma.MfaScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  secret: 'secret',
+  qrBase64: 'qrBase64',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -131,7 +153,9 @@ exports.Prisma.QueryMode = {
 
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  UserLoginDetails: 'UserLoginDetails',
+  Mfa: 'Mfa'
 };
 
 /**

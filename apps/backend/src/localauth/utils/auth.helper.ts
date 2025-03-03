@@ -3,12 +3,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JWTService } from 'src/utils/jwt/jwt.service';
 import Redis from 'ioredis';
 import { randomUUID } from 'crypto';
+import { MfaService } from './mfa.service';
 @Injectable()
 export class AuthHelper {
     private logger = new Logger(AuthHelper.name);
     constructor(
         private readonly jwtUtil: JWTService,
         @InjectRedis() private readonly redisService: Redis,
+        private mfaService:MfaService
     ) { }
 
     /**
@@ -101,6 +103,17 @@ export class AuthHelper {
             console.log(err)
             throw new Error('Invalid access token');
         }
+    }
+
+    /**
+     * Activates 2FA for a user.
+     */
+    async generateMfaSecret(userId: string) {
+        return  await this.mfaService.generateSecret(userId);
+    }
+
+    async verifyMfaToken(secret: string, token: string) {
+        return this.mfaService.verifyToken(secret, token);
     }
 
     /**
@@ -207,5 +220,20 @@ export class AuthHelper {
     async getActiveDevices(userId: string): Promise<any[]> {
         const devicesData = await this.redisService.get(`devices:${userId}`);
         return devicesData ? JSON.parse(devicesData) : [];
+    }
+
+
+    async sendMFA(req: any, userId: any, type: any) {
+        throw new Error('Method not implemented.');
+    }
+
+    async sendVerificationSMS(phoneNumber: string, code: string) {
+        throw new Error('Method not implemented.');
+    }
+    async sendVerificationEmail(email: string, code: string) {
+        throw new Error('Method not implemented.');
+    }
+    async initAuthenticator(userId: string) {
+        throw new Error('Method not implemented.');
     }
 }
