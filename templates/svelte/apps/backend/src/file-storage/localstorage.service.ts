@@ -3,7 +3,6 @@ import { IFileStorage } from "./interface/IFileStorage";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { ConfigService } from "@nestjs/config";
-import {Multer} from 'multer'
 
 @Injectable()
 export class LocalStorageService implements IFileStorage {
@@ -14,7 +13,7 @@ export class LocalStorageService implements IFileStorage {
     this.baseUrl = this.configService.get("BASE_URL") || "http://localhost:3000";
   }
 
-  async uploadFile(file: Multer.File): Promise<string> {
+  async uploadFile(file: Express.Multer.File): Promise<string> {
     const filePath = path.join(this.storagePath, file.filename);
     await fs.writeFile(filePath, file.buffer);
     

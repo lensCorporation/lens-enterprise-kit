@@ -1,19 +1,25 @@
 import { Injectable } from "@nestjs/common";
 import { IFileStorage } from "./interface/IFileStorage";
-import * as AWS from "aws-sdk";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { ConfigService } from "@nestjs/config";
-import { Multer } from "multer";
 
 @Injectable()
 export class AwsS3Service implements IFileStorage {
-  private s3: AWS.S3;
+  private s3: S3Client;
   private bucketName: string;
+  private region: string;
 
   constructor(private configService: ConfigService) {
-    this.s3 = new AWS.S3({
-      accessKeyId: this.configService.get("AWS_ACCESS_KEY_ID"),
-      secretAccessKey: this.configService.get("AWS_SECRET_ACCESS_KEY"),
-      region: this.configService.get("AWS_REGION"),
+    this.region = this.configService.get("AWS_REGION");
+    const accessKeyId = this.configService.get("AWS_ACCESS_KEY_ID");
+    const secretAccessKey = this.configService.get("AWS_SECRET_ACCESS_KEY");
+
+    this.s3 = new S3Client({
+      region: this.region,
+      // Fall back to the SDK's default credential chain when keys are not set
+      ...(accessKeyId && secretAccessKey
+        ? { credentials: { accessKeyId, secretAccessKey } }
+        : {}),
     });
 
     this.bucketName = this.configService.get("AWS_BUCKET_NAME")||'NO_BUCKET';
@@ -22,23 +28,28 @@ export class AwsS3Service implements IFileStorage {
     }
   }
 
-  async uploadFile(file: Multer.File): Promise<string> {
-    const params: AWS.S3.PutObjectRequest = {
-      Bucket: this.bucketName,
-      Key: `${Date.now()}-${file.originalname}`, // Unique file name
-      Body: file.buffer,
-      ACL: "public-read",
-      ContentType: file.mimetype,
-    };
+  async uploadFile(file: Express.Multer.File): Promise<string> {
+    const key = `${Date.now()}-${file.originalname}`; // Unique file name
 
-    const uploadResult = await this.s3.upload(params).promise();
-    return uploadResult.Location; // Return public URL of the file
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: file.buffer,
+        ACL: "public-read",
+        ContentType: file.mimetype,
+      }),
+    );
+
+    return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${encodeURIComponent(key)}`; // Return public URL of the file
   }
 
   async deleteFile(fileUrl: string): Promise<boolean> {
     try {
       const key = new URL(fileUrl).pathname.split("/").slice(-1)[0]; // Extract file name from URL
-      await this.s3.deleteObject({ Bucket: this.bucketName, Key: key }).promise();
+      await this.s3.send(
+        new DeleteObjectCommand({ Bucket: this.bucketName, Key: decodeURIComponent(key) }),
+      );
       return true;
     } catch (error) {
       console.error("Error deleting file:", error);
