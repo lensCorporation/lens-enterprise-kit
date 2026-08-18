@@ -29,6 +29,20 @@ export class AwsS3Service implements IFileStorage {
   }
 
   async uploadFile(file: Express.Multer.File): Promise<string> {
+    // aws-sdk v2's managed upload() validated params client-side and rejected a
+    // missing Body. PutObjectCommand does not, so without this guard a file from
+    // multer's diskStorage (buffer === undefined) writes a 0-byte object and
+    // still returns a healthy-looking URL.
+    if (!file?.buffer) {
+      throw new Error(
+        "AwsS3Service.uploadFile requires an in-memory file buffer (multer memoryStorage).",
+      );
+    }
+
+    // Resolve the region BEFORE uploading, so a resolution failure cannot strand
+    // an uploaded object behind a URL we are unable to construct.
+    const region = this.region || (await this.resolveRegion());
+
     const key = `${Date.now()}-${file.originalname}`; // Unique file name
 
     await this.s3.send(
@@ -41,7 +55,29 @@ export class AwsS3Service implements IFileStorage {
       }),
     );
 
-    return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${encodeURIComponent(key)}`; // Return public URL of the file
+    return `https://${this.bucketName}.s3.${region}.amazonaws.com/${encodeURIComponent(key)}`; // Return public URL of the file
+  }
+
+  /**
+   * v2 returned uploadResult.Location straight from the SDK, so it could never
+   * produce a bad host. The v3 rewrite builds the URL itself, so an unset
+   * AWS_REGION would otherwise persist a URL containing the literal string
+   * "undefined". Fall back to whatever region the SDK actually resolved
+   * (env, shared profile, or instance metadata).
+   */
+  private async resolveRegion(): Promise<string> {
+    const configured = (this.s3.config as { region?: unknown })?.region;
+    const resolved =
+      typeof configured === "function"
+        ? await (configured as () => Promise<string> | string)()
+        : configured;
+
+    if (!resolved || typeof resolved !== "string") {
+      throw new Error(
+        "AWS_REGION is not set and could not be resolved from the AWS SDK configuration.",
+      );
+    }
+    return resolved;
   }
 
   async deleteFile(fileUrl: string): Promise<boolean> {
