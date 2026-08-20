@@ -1,0 +1,124 @@
+# CI for lens-enterprise-kit.
+#
+# The repo is three independent installs, not one:
+#   - the pnpm workspace root (apps/backend, apps/docs, packages/*)
+#   - apps/web/next    — standalone, npm + package-lock.json
+#   - apps/web/svelte  — standalone, pnpm with its own lockfile
+# pnpm-workspace.yaml's `apps/*` glob does not reach apps/web/*, so each gets
+# its own job rather than one install that silently covers two thirds of it.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+
+jobs:
+  workspace:
+    name: Workspace — backend tests + builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Backend tests
+        working-directory: apps/backend
+        run: pnpm test
+
+      - name: Build (turbo)
+        run: pnpm run build
+
+  next-app:
+    name: apps/web/next — build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/web/next/package-lock.json
+
+      - name: Install
+        working-directory: apps/web/next
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/web/next
+        run: npm run build
+
+  svelte-app:
+    name: apps/web/svelte — build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/web/svelte/pnpm-lock.yaml
+
+      - name: Install
+        working-directory: apps/web/svelte
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: apps/web/svelte
+        run: pnpm run build
+
+  audit:
+    name: Dependency audit (advisory, non-blocking)
+    runs-on: ubuntu-latest
+    # Reports newly-published advisories without blocking a merge on something
+    # nobody in this PR introduced. Read it; do not let it gate you.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Audit — workspace root
+        run: pnpm audit --audit-level=high || true
+
+      - name: Audit — apps/web/next
+        working-directory: apps/web/next
+        run: npm audit --audit-level=high || true
+
+      - name: Audit — apps/web/svelte
+        working-directory: apps/web/svelte
+        run: pnpm audit --audit-level=high || true
