@@ -22,21 +22,21 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: "20"
-  PNPM_VERSION: "9"
+  # Node 20 went EOL in April 2026. 24 is current LTS and matches local dev.
+  NODE_VERSION: "24"
+  # pnpm version intentionally NOT set here: it comes from the root
+  # package.json "packageManager" field. Setting both is ERR_PNPM_BAD_PM_VERSION.
 
 jobs:
   workspace:
     name: Workspace — backend tests + builds
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -55,9 +55,9 @@ jobs:
     name: apps/web/next — build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -75,13 +75,11 @@ jobs:
     name: apps/web/svelte — build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -102,13 +100,11 @@ jobs:
     # nobody in this PR introduced. Read it; do not let it gate you.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
 
