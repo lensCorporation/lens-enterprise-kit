@@ -85,9 +85,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: apps/web/svelte/pnpm-lock.yaml
 
+      # apps/web/svelte is not a member of the root workspace (`apps/*` does not
+      # reach two levels deep), but pnpm still walks up, finds the root
+      # pnpm-workspace.yaml, and installs THAT — leaving this project without
+      # node_modules and the build with `vite: not found`. --ignore-workspace
+      # pins the install to this directory and its own lockfile.
       - name: Install
         working-directory: apps/web/svelte
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-workspace
 
       - name: Build
         working-directory: apps/web/svelte
@@ -107,6 +112,10 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
+          # This job deliberately does not install, so there is no package
+          # manager cache to save; setup-node@v5 enables it by default and the
+          # post-step then errors on the missing path.
+          package-manager-cache: false
 
       - name: Audit — workspace root
         run: pnpm audit --audit-level=high || true
