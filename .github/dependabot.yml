@@ -1,0 +1,64 @@
+# Dependabot configuration.
+#
+# Scope note: this file configures Dependabot's PULL REQUESTS. It cannot
+# suppress Dependabot ALERTS — the dependency graph picks up every manifest in
+# the repo, and there is no per-path alert filter. What it does do is batch the
+# resulting PRs so a week's worth of updates arrives as one or two reviewable
+# PRs instead of dozens.
+#
+# Layout note: `apps/*` in pnpm-workspace.yaml matches apps/backend and
+# apps/docs, but NOT apps/web/next or apps/web/svelte (two levels deep), which
+# are standalone projects with their own lockfiles. They need their own entries.
+# The templates/ trees mirror the same structure one level shallower, so their
+# workspace roots cover their members.
+
+version: 2
+
+updates:
+  - package-ecosystem: "npm" # also covers pnpm
+    directories:
+      - "/" # workspace root: apps/backend, apps/docs, packages/*
+      - "/apps/web/next" # standalone, npm + package-lock.json
+      - "/apps/web/svelte" # standalone, pnpm + own lockfile
+      - "/templates/next" # workspace: apps/next, apps/backend, packages/*
+      - "/templates/svelte" # workspace: apps/backend, packages/*
+      - "/templates/svelte/apps/svelte" # standalone, own lockfile
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    groups:
+      # One PR for everything security-related, so a burst of advisories does
+      # not become a burst of pull requests.
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      # Routine minor/patch bumps, batched weekly.
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+      # Majors stay grouped but separate — they are the ones worth reading.
+      major:
+        applies-to: version-updates
+        update-types:
+          - "major"
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+    groups:
+      actions:
+        patterns:
+          - "*"

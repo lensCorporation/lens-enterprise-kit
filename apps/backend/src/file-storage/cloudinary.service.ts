@@ -3,7 +3,6 @@ import { IFileStorage } from "./interface/IFileStorage";
 import { v2 as cloudinary } from "cloudinary";
 import { ConfigService } from "@nestjs/config";
 import * as streamifier from "streamifier";
-import { Multer } from "multer";
 
 @Injectable()
 export class CloudinaryService implements IFileStorage {
@@ -15,7 +14,7 @@ export class CloudinaryService implements IFileStorage {
     });
   }
 
-  async uploadFile(file: Multer.File): Promise<string> {
+  async uploadFile(file: Express.Multer.File): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         (error, result) => {

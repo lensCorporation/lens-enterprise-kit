@@ -1,14 +1,13 @@
 {
-    "name": "next-template",
-    "version": "1.0.0",
-    "private": true,
-    "scripts": {
-      "dev": "turbo run dev",
-      "build": "turbo run build",
-      "start": "turbo run start"
-    },
-    "devDependencies": {
-      "turbo": "^1.10.0"
-    }
+  "name": "next-template",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.14"
   }
-  
+}

@@ -8,7 +8,7 @@ export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
 export interface ApiOptions {
     method?: ApiMethod
-    body?: any
+    body?: unknown
     headers?: Record<string, string>
     cache?: RequestCache
     revalidate?: number | false
@@ -159,7 +159,7 @@ export async function createApiClient(baseUrl: string, defaultOptions: ApiOption
         },
 
         //Common API Methods
-        get: async<T>(path: string, queryOrParams?: Record<string, any> | null, options: Omit<ApiOptions, 'method' | 'body' | 'query' | 'params'> = {}): Promise<ApiResponse<T>> => {
+        get: async<T>(path: string, queryOrParams?: Record<string, unknown> | null, options: Omit<ApiOptions, 'method' | 'body' | 'query' | 'params'> = {}): Promise<ApiResponse<T>> => {
             // Determine if this is a query or path params based on path
             const hasPathParams = path.includes(':')
 
@@ -185,7 +185,7 @@ export async function createApiClient(baseUrl: string, defaultOptions: ApiOption
 
         post: async <T>(
             path: string,
-            body: any,
+            body: unknown,
             options: Omit<ApiOptions, 'method' | 'body'> = {}
         ): Promise<ApiResponse<T>> => {
             const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
@@ -199,7 +199,7 @@ export async function createApiClient(baseUrl: string, defaultOptions: ApiOption
 
         put: async <T>(
             path: string,
-            body: any,
+            body: unknown,
             options: Omit<ApiOptions, 'method' | 'body'> = {}
         ): Promise<ApiResponse<T>> => {
             const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
@@ -213,7 +213,7 @@ export async function createApiClient(baseUrl: string, defaultOptions: ApiOption
 
         patch: async <T>(
             path: string,
-            body: any,
+            body: unknown,
             options: Omit<ApiOptions, 'method' | 'body'> = {}
         ): Promise<ApiResponse<T>> => {
             const url = path.startsWith('http') ? path : `${baseUrl}${path}`;

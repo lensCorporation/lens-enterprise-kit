@@ -9,8 +9,8 @@ interface UseApiOptions<T> {
     onSuccess? : (data : T) => void;
     onError? : (error: string) => void;
     executeOnMount? :boolean;
-    executeOnMountParams? :any;
-    executeOnDeps? : any[];
+    executeOnMountParams? :unknown;
+    executeOnDeps? : unknown[];
 }
 
 interface FetchState<T> {

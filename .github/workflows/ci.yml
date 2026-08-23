@@ -1,0 +1,129 @@
+# CI for lens-enterprise-kit.
+#
+# The repo is three independent installs, not one:
+#   - the pnpm workspace root (apps/backend, apps/docs, packages/*)
+#   - apps/web/next    — standalone, npm + package-lock.json
+#   - apps/web/svelte  — standalone, pnpm with its own lockfile
+# pnpm-workspace.yaml's `apps/*` glob does not reach apps/web/*, so each gets
+# its own job rather than one install that silently covers two thirds of it.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Node 20 went EOL in April 2026. 24 is current LTS and matches local dev.
+  NODE_VERSION: "24"
+  # pnpm version intentionally NOT set here: it comes from the root
+  # package.json "packageManager" field. Setting both is ERR_PNPM_BAD_PM_VERSION.
+
+jobs:
+  workspace:
+    name: Workspace — backend tests + builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Backend tests
+        working-directory: apps/backend
+        run: pnpm test
+
+      - name: Build (turbo)
+        run: pnpm run build
+
+  next-app:
+    name: apps/web/next — build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/web/next/package-lock.json
+
+      - name: Install
+        working-directory: apps/web/next
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/web/next
+        run: npm run build
+
+  svelte-app:
+    name: apps/web/svelte — build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/web/svelte/pnpm-lock.yaml
+
+      # apps/web/svelte is not a member of the root workspace (`apps/*` does not
+      # reach two levels deep), but pnpm still walks up, finds the root
+      # pnpm-workspace.yaml, and installs THAT — leaving this project without
+      # node_modules and the build with `vite: not found`. --ignore-workspace
+      # pins the install to this directory and its own lockfile.
+      - name: Install
+        working-directory: apps/web/svelte
+        run: pnpm install --frozen-lockfile --ignore-workspace
+
+      - name: Build
+        working-directory: apps/web/svelte
+        run: pnpm run build
+
+  audit:
+    name: Dependency audit (advisory, non-blocking)
+    runs-on: ubuntu-latest
+    # Reports newly-published advisories without blocking a merge on something
+    # nobody in this PR introduced. Read it; do not let it gate you.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          # This job deliberately does not install, so there is no package
+          # manager cache to save; setup-node@v5 enables it by default and the
+          # post-step then errors on the missing path.
+          package-manager-cache: false
+
+      - name: Audit — workspace root
+        run: pnpm audit --audit-level=high || true
+
+      - name: Audit — apps/web/next
+        working-directory: apps/web/next
+        run: npm audit --audit-level=high || true
+
+      - name: Audit — apps/web/svelte
+        working-directory: apps/web/svelte
+        run: pnpm audit --audit-level=high || true
